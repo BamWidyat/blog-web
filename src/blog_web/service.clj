@@ -7,16 +7,6 @@
             [io.pedestal.interceptor :refer [interceptor]]
             [hiccup.core :as hc]))
 
-;(defn about-page
-;  [request]
-;  (ring-resp/response (format "Clojure %s - served from %s"
-;                              (clojure-version)
-;                              (route/url-for ::about-page))))
-
-;(defn home-page
-;  [request]
-;  (ring-resp/response "Hello World!!!!!!!!!!!!!!!"))
-
 
 ;;-----------function-----------
 
@@ -26,10 +16,10 @@
 
 (defn post-list [post]
   (for [keyval (keys post)]
-    [:div
-     (str "Post #" (:number (keyval post)))
-     [:a {:href (str "/post/" (:number (keyval post)))} [:h1 (str (:title (keyval post)))]]
-     (str (:content (keyval post)))[:hr][:br][:br]]))
+    [:div {:class "col-sm-4"}
+     [:h5 [:small (str "Post #" (:number (keyval post)))]]
+     [:a {:href (str "/post/" (:number (keyval post)))} [:h3 (str (:title (keyval post)))]]
+     (str (:content (keyval post)))[:br][:br]]))
 
 (defn keymaker [num]
   (cond
@@ -39,86 +29,149 @@
    (= (count (str num)) 4) (keyword (str num))))
 
 
+(defn bootstrap []
+  (for [cnt (range 4)]
+    ([[:meta {:charset "utf-8"}]
+      [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
+      [:link {:rel "stylesheet" :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"}]
+      [:script {:src "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"}]
+      [:script {:src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"}]] cnt)))
+
+
+(defn navpanel [active]
+  [:nav {:class "navbar navbar-inverse"}
+              [:div {:class "container-fluid"}
+               [:div {:class "navbar-header"}
+                [:a {:class "navbar-brand" :href "/"} "BlogWeb"]]
+               [:ul {:class "nav navbar-nav"}
+                (if (= active 1)
+                  [:li {:class "active"} [:a {:href "/"} "Home"]]
+                  [:li [:a {:href "/"} "Home"]])
+                [:li [:a {:href "/"} "About"]]]
+               [:ul {:class "nav navbar-nav navbar-right"}
+                [:li [:a {:href "#"} [:span {:class "glyphicon glyphicon-user"}] " Sign Up"]]
+                [:li [:a {:href "#"} [:span {:class "glyphicon glyphicon-log-in"}] " Login"]]]]])
+
+
 ;;-----------html-----------
 
 
 (defn home-html [post]
   (hc/html [:html
             [:head
-             [:title "Home"]]
+             [:title "Home"]
+             (bootstrap)]
             [:body
-             [:div {:align "center"}
+             (navpanel 1)
+             [:div {:class "jumbotron text-center"}
               [:h1 "Home Page"]
+              [:p "Welcome to blog test page"]]
+             [:div {:class "container"}
               (if (empty? post)
-                [:div "No Post Yet!" [:br][:br]]
-                (post-list (into (sorted-map) post)))
-              [:a {:href "/new"}
-               [:button {:type "button"} "Create New Post"]]]]]))
+                [:div {:class "container-fluid"}
+                 [:div {:class "alert alert-info"}
+                  [:strong "You have no post yet!"] " Click the new post button to create a new post"]]
+                [:div {:class "row"}
+                 (post-list (into (sorted-map) post))])
+              [:div {:class "text-center"}
+               [:br][:br]
+               [:a {:href "/new"}
+                [:button {:class "btn btn-primary" :type "button"} "New Post"]]
+               [:br][:br]]]]]))
 
 (def new-post-html
   (hc/html [:html
             [:head
-             [:title "Create New Post"]]
+             [:title "Create New Post"]
+             (bootstrap)]
             [:body
+             (navpanel 0)
              [:div {:align "center"}
-              [:h1 "Create New Post"]
+              [:h1 "Create New Post"]]
+             [:div {:class "container"}
               [:form {:action "/ok" :method "post" :id "input-form"}
-               "Title"[:br]
-               [:input {:type "text" :name "title" :size "100%" :required ""}][:br][:br]
-               "Content"[:br]
-               [:textarea {:name "content" :size "100%" :form "input-form" :rows "20" :cols "100" :required ""}][:br][:br]
-               [:a {:href "/"} [:button {:type "button"} "Cancel"]] "    "
-               [:input {:type "reset" :value "Reset"}] "    "
-               [:input {:type "submit" :value "Create"}]]]]]))
+               [:div {:class "form-group"}
+                [:label {:for "title"} "Title"]
+                [:input {:type "text" :class "form-control" :id "title" :name "title" :required ""}]]
+               [:div {:class "form-group"}
+                [:label {:for "content"} "Content"]
+                [:textarea {:class "form-control" :rows "20" :id "content" :name "content" :required ""}]]
+               [:div {:class "text-center"}
+                [:div {:class "btn-group"}
+                 [:a {:href "/" :class "btn btn-primary"} "Cancel"]
+                 [:button {:type "reset" :class "btn btn-primary"} "Reset"]
+                 [:button {:type "submit" :class "btn btn-primary"} "Submit"]]]]]]]))
 
 (defn edit-post-html [number title content]
   (hc/html [:html
             [:head
-             [:title "Edit Post"]]
+             [:title "Edit Post"]
+             (bootstrap)]
             [:body
+             (navpanel 0)
              [:div {:align "center"}
-              [:h1 "Edit Post"]
+              [:h1 "Edit Post"]]
+             [:div {:class "container"}
               [:form {:action (str "/okedit/" number) :method "post" :id "input-form"}
-               "Title"[:br]
-               [:input {:type "text" :name "title" :size "100%" :value (str title) :required ""}][:br][:br]
-               "Content"[:br]
-               [:textarea {:name "content" :size "100%" :form "input-form" :rows "20" :cols "100" :required ""} (str content)][:br][:br]
-               [:a {:href "/"} [:button {:type "button"} "Cancel"]] "    "
-               [:input {:type "reset" :value "Reset"}] "    "
-               [:input {:type "submit" :value "Edit"}]]]]]))
+               [:div {:class "form-group"}
+                [:label {:for "title"} "Title"]
+                [:input {:type "text" :class "form-control" :id "title" :name "title" :value (str title)}]]
+               [:div {:class "form-group"}
+                [:label {:for "content"} "Content"]
+                [:textarea {:class "form-control" :rows "20" :id "content" :name "content"} (str content)]]
+               [:div {:class "text-center"}
+                [:div {:class "btn-group"}
+                 [:a {:href (str "/post/" number) :class "btn btn-primary"} "Cancel"]
+                 [:button {:type "reset" :class "btn btn-primary"} "Reset"]
+                 [:button {:type "submit" :class "btn btn-primary"} "Edit"]]]]]]]))
 
 (def post-ok-html
   (hc/html [:html
             [:head
-             [:title "Create New Post"]]
+             [:title "Create New Post"]
+             (bootstrap)]
             [:body
-             [:div {:align "center"}
-              [:h1 "Congratulations"]
-              "Your post successfully created!"[:br][:br]
-              [:a {:href "/new"} [:button {:type "button"} "Create New Post"]]"   "
-              [:a {:href "/"} [:button {:type "button"} "Go to Home"]]]]]))
+             (navpanel 0)
+             [:div {:class "container-fluid"}
+              [:div {:class "alert alert-success"}
+               [:strong "Congratulations!"] " Your post successfully created!"]
+              [:div {:class "text-center"}
+               [:div {:class "btn-group"}
+                [:a {:href "/new" :class "btn btn-primary"} "New Post"]
+                [:a {:href "/" :class "btn btn-primary"} "Home"]]]]]]))
 
 (def edit-ok-html
   (hc/html [:html
             [:head
-             [:title "Edit Post"]]
+             [:title "Edit Post"]
+             (bootstrap)]
             [:body
-             [:div {:align "center"}
-              [:h1 "Congratulations"]
-              "Your post successfully edited!"[:br][:br]
-              [:a {:href "/"} [:button {:type "button"} "Go to Home"]]]]]))
+             (navpanel 0)
+             [:div {:class "container-fluid"}
+              [:div {:class "alert alert-success"}
+               [:strong "Congratulations!"] " Your post successfully edited!"]
+              [:div {:class "text-center"}
+               [:a {:href "/" :class "btn btn-primary"} "Home"]]]]]))
+
 
 (defn post-view-html [post postid postnum]
   (hc/html [:html
             [:head
-             [:title (str "Post Page :: " (:title (postid post)))]]
+             [:title (str "Post Page :: " (:title (postid post)))]
+             (bootstrap)]
             [:body
-             [:div {:align "center"}
-              [:h1 (str (:title (postid post)))]
-              (str (:content (postid post)))[:br][:br]
-              [:a {:href "/"} [:button {:type "button"} "Go to Home"]]"   "
-              [:a {:href (str "/delete/" postnum)} [:button {:type "button"} "Delete"]] "   "
-              [:a {:href (str "/edit/" postnum)} [:button {:type "button"} "Edit"]]]]]))
+             (navpanel 0)
+             [:div {:class "container"}
+              [:h1 [:strong (str (:title (postid post)))]]
+              [:br]
+              (str (:content (postid post)))
+              [:br][:br]
+              [:div {:class "text-center"}
+               [:div {:class "btn-group"}
+                [:a {:href "/" :class "btn btn-primary"} "Home"]
+                [:a {:href (str "/delete/" postnum) :class "btn btn-primary"} "Delete"]
+                [:a {:href (str "/edit/" postnum) :class "btn btn-primary"} "Edit"]]]]]]))
+
 
 (def no-page-html
   (hc/html [:html
@@ -251,15 +304,14 @@
 
 
 (def routes
-  (route/expand-routes
-   #{["/" :get (conj common-interceptors home-main)]
-     ["/new" :get (conj common-interceptors new-post)]
-     ["/ok" :post (conj common-interceptors create-post)]
-     ["/okedit/:postid" :post (conj common-interceptors edit-post-ok)]
-     ["/post/:postid" :get (conj common-interceptors view-post)]
-     ["/edit/:postid" :get (conj common-interceptors edit-post)]
-     ["/delete/:postid" :get (conj common-interceptors delete-post)]
-     ["/deleteok/:postid" :post (conj common-interceptors delete-post-ok)]}))
+  #{["/" :get (conj common-interceptors home-main)]
+    ["/new" :get (conj common-interceptors new-post)]
+    ["/ok" :post (conj common-interceptors create-post)]
+    ["/okedit/:postid" :post (conj common-interceptors edit-post-ok)]
+    ["/post/:postid" :get (conj common-interceptors view-post)]
+    ["/edit/:postid" :get (conj common-interceptors edit-post)]
+    ["/delete/:postid" :get (conj common-interceptors delete-post)]
+    ["/deleteok/:postid" :post (conj common-interceptors delete-post-ok)]})
 
 ;; Tabular routes
 ;(def routes #{["/" :get (conj common-interceptors `home-page)]
