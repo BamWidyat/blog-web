@@ -185,13 +185,20 @@
 (defn delete-confirm-html [postnum]
   (hc/html [:html
             [:head
-             [:title "Delete Post Confirmation"]]
+             [:title "Delete Post Confirmation"]
+             (bootstrap)]
             [:body
-             [:div {:align "center"}
-              (str "Are you sure you want to delete Post #" postnum "?")[:br][:br]
-              [:form {:action (str "/deleteok/" postnum) :method "post"}
-               [:a {:href (str "/post/" postnum)} [:button {:type "button"} "No"]] "   "
-               [:input {:type "submit" :value "Yes"}]]]]]))
+             (navpanel 0)
+             [:div {:class "container-fluid"}
+              [:div {:class "alert alert-warning"} [:strong (str "You are about to delete Post #" postnum " !")]
+               " Deleted post cannot be recovered, are you sure you delete this post?"]
+              [:br][:br]
+              [:div {:class "text-center"}
+               [:form {:action (str "/deleteok/" postnum) :method "post"}
+                [:a {:href (str "/post/" postnum) :class "btn btn-default"} "Cancel"]
+                "     "
+                [:button {:type "submit" :class "btn btn-primary"} "Yes"]]]]]]))
+
 
 (def delete-ok-html
   (hc/html [:html
